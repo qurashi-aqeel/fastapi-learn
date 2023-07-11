@@ -13,6 +13,11 @@
 - Download and install postgresql
 - Create DB, table and write SQL quries
 - Connecting to DB from app
+  - Retreving data from DB
+  - Creating a post
+- Using SQLAlchemy
+  - Install sqlAlchemy and setup conn & models
+  - Qureying DB
 
 ## Setup
 
@@ -239,3 +244,160 @@ Delete:
 ```
 
 ## connecting to DB from app
+
+```py
+
+while True:
+    try:
+        conn = psycopg.connect(
+            host="localhost", dbname="fastapi-learn",
+            user="postgres", password="password"
+        )
+        print("DB connected.")
+        cur = conn.cursor(row_factory=dict_row)
+
+        break
+
+    except Exception as error:
+        print("Failed connecting to DB", error)
+        time.sleep(2)
+
+```
+
+### Retreving data from DB
+
+```py
+# Get all posts
+@app.get('/posts')
+def get_posts():
+    posts = cur.execute("SELECT * FROM posts").fetchall()
+    return {"data": posts}
+
+```
+
+### Creating a post DB
+
+```py
+# Create a post
+@app.post('/posts', status_code=status.HTTP_201_CREATED)
+async def create_post(post: Post):
+    new_post = cur.execute(
+        f"INSERT INTO posts (title, content, draft) VALUES (%s, %s, %s) RETURNING *", (post.title, post.content, post.draft)).fetchone()
+    conn.commit()
+    return {"data": new_post}
+```
+
+## Install sqlAlchemy and setup conn & models
+
+- conn. string format: `postgresql://<username>:<password>@<ip-address/hostname/domain>/<DB_name>`
+
+- Install sqlAlchemy: `pip install sqlalchemy`
+
+- database.py
+
+```py
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+DATABASE_CONN_STRING = 'postgresql://postgres:password@localhost/fastapi-learn'
+
+engine = create_engine(DATABASE_CONN_STRING)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+```
+
+- models.py
+
+```py
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql.sqltypes import TIMESTAMP
+from sqlalchemy.sql.expression import text
+
+from .database import Base
+
+
+class Post(Base):
+    __tablename__ = 'posts'
+
+    id = Column(Integer, primary_key=True, index=True, nullable=False)
+    title = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    draft = Column(Boolean, server_default='FALSE')
+    created_at = Column(TIMESTAMP(timezone=True),
+                        nullable=False, server_default=text('now()'))
+
+```
+
+### Qureying DB
+
+```py
+# Getting data
+@app.get('/posts')
+def test(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return {"data": posts}
+```
+
+```py
+# Posting/Inserting data
+@app.post('/posts', status_code=status.HTTP_201_CREATED)
+async def create_post(post: Post, db: Session = Depends(get_db)):
+    new_post = models.Post(**post.model_dump())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+
+    return {"data": new_post}
+```
+
+- Normally we would pass the arguments to the `models.Post()` as `title=post.title, content=post.content, draft=post.draft` but there is an easier and consize way of doing the same:
+
+  - Convert the post to dict using `post.model_dump()`.
+  - Convert the post_dict to required format `title=post.title,..` prefixing it with `**`.
+  - pass it `**post.model_dump()` as the argument to the `models.Post()`
+  - Or simply we can say that `**post.model_dump()` unpacks the values.
+
+- Get, Post, Put, Del
+
+```py
+# GET
+posts = db.query(models.Post).all()
+
+# POST
+new_post = models.Post(**post.model_dump())
+db.add(new_post)
+db.commit()
+db.refresh(new_post)
+
+# GET One
+matched_post = db.query(models.Post).filter(models.Post.id == id).first()
+
+# DEL
+matched_post = db.query(models.Post).filter(
+  models.Post.id == id
+).delete(synchronize_session=False)
+db.commit()
+
+# PUT
+post_query = db.query(models.Post).filter(models.Post.id == id)
+    post_to_update = post_query.first()
+
+if (post_to_update):
+    post_query.update(dict(post.model_dump()), synchronize_session=False)
+    db.commit()
+    return {"Updated post": post_query.first()}
+```
