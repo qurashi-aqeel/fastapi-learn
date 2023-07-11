@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Response, status, HTTPException
 from pydantic import BaseModel
-from random import randrange
 import psycopg
 from psycopg.rows import dict_row
 import time
@@ -21,10 +20,6 @@ while True:
         )
         print("DB connected.")
         cur = conn.cursor(row_factory=dict_row)
-
-        # cur.execute("SELECT * FROM posts")
-        # results = cur.fetchall()
-        # print(results)
 
         break
 
@@ -84,8 +79,6 @@ async def get_post(id: int, response: Response):
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail={"error": f"Post {id} not found."})
-        # response.status_code = 404
-        # return {"data": {"error": "No such post"}}
 
 
 # Delete a post
