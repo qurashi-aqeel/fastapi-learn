@@ -10,6 +10,9 @@
 - Start coding the basic api
   - Creating first path operation
   - Post request path operation
+- Download and install postgresql
+- Create DB, table and write SQL quries
+- Connecting to DB from app
 
 ## Setup
 
@@ -127,7 +130,7 @@ class Post(BaseModel):
 
 
 # create a post path operation:
-@app.post('/create')
+@app.post('/create', status_code=status.HTTP_201_CREATED) # default status code for path op.
 def create(post: Post):
   return post
 ```
@@ -135,3 +138,104 @@ def create(post: Post):
 everything else will be there, such as fastApi import etc.
 
 Now if we don't send any of the required fields in request body or send any field which can't be converted (say "a" instead of int value), it will automatically through an error with status code of 422.
+
+- To keep everything organized we will create a folder named app which changes our command to:
+
+```sh
+uvicorn app.main:app --reload
+```
+
+telling python to find the main file inside app folder.
+
+## Download and install postgresql
+
+Download the specific version of the postgresql software from official website, install and setup a password, which will be the root password.
+
+## Create DB, table and write SQL quries
+
+There should be an existing DB `postgres` which you could use but let's create something else with our preferred name `fastapi` it might ask for some password give it a password and we are ready to create a table.
+
+Go inside `databases` > `fastapi` > `schemas` > `public` > `tables`.
+
+Create table `products` with few columns `id, name etc`.
+
+Here is an SQL query which might describe various basic things for getting the data from DB.
+
+```sql
+  SELECT id, name, price, created_at, in_stock,
+  inventory AS quantity /* Rename inventory as quantity */
+  FROM products
+  WHERE name NOT LIKE '%b%' /* Something as prefic and sufix of 'b' */
+  AND ( /* Match this as well (anyone from below) OR */
+    inventory >= 5
+    OR name = 'tv'
+    OR id IN (1, 9, 10)
+  ) ORDER BY created_at DESC, price /* Sort by latest first */
+  OFFSET 0 /* Skip as many entries */
+  LIMIT 10; /* Limit the entries to 10 */
+```
+
+- Limit and offset will be used for pagination.
+
+Inserting data to DB
+
+```sql
+  INSERT INTO products (
+    name, price, inventory
+  ) VALUES (
+    'macbook', 500, 3
+  ), (
+    'monitor', 70, 17
+  ) RETURNING id, name; /* * to return all fields */
+```
+
+Disclaimer: This is advanced usecase:
+If we want some column dependent on another we can use the triggers in postgress as:
+
+```sql
+
+CREATE OR REPLACE FUNCTION set_in_stock()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.inventory > 0 THEN
+        NEW.in_stock := true;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_in_stock_trigger
+BEFORE INSERT ON products
+FOR EACH ROW
+EXECUTE FUNCTION set_in_stock();
+
+```
+
+This query will set a trigger that whenever anything is inserted into the database or anything is added to it it will update the `in_Stock` as per the value of `inventory`, if the inventory is 0, it will set the `in_stock` to false else true.
+
+Alter Table:
+
+```sql
+  ALTER TABLE products
+  ADD CONSTRAINT in_stock_check
+  CHECK (inventory > 0 AND in_stock = true);
+```
+
+Update table data:
+
+```sql
+  UPDATE products
+  SET name='brush', price=12
+  WHERE id=10
+  RETURNING id, name;
+```
+
+Delete:
+
+```sql
+  DELETE FROM products
+  WHERE name = 'chair'
+  RETURNING *;
+```
+
+## connecting to DB from app
