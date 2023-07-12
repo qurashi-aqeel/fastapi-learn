@@ -20,6 +20,7 @@
   - Qureying DB
 - Defining response Model
 - Password Hashing with passlib
+- routers (keeping route based code seperated)
 
 ## Setup
 
@@ -436,11 +437,13 @@ def get_posts(db: Session = Depends(get_db)):
 ## Password Hashing with passlib
 
 Install passlib:
+
 ```sh
 pip install "passlib[bcrypt]"
 ```
 
 Create user with hashed password
+
 ```py
 # utils.py - hash password utility function
 from passlib.context import CryptContext
@@ -472,3 +475,27 @@ def create_user(
     return new_user
 
 ```
+
+## routers (keeping route based code seperated)
+
+- Routers help us to seperate the path operation logic outside of our main.py, so that it remains cleaner.
+
+- So we create a routers folder inside which we create 3 files:
+
+  - `__init__.py`: making it the subpackage.
+  - `post.py`: includes post related routes.
+  - `user.py`: includes user related routes.
+
+- Now we can organize our routes as well as SwaggerUi better:
+
+  - inside `post.py` we do something like this:
+
+  ```py
+    from fastapi import APIRouter
+
+    router = APIRouter(
+      prefix='/posts',
+      tags=["Posts"] 
+      # This will group the post related requests under 'Posts' title.
+    )
+  ```
