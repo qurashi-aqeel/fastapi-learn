@@ -23,6 +23,9 @@
 - routers (keeping route based code seperated)
 - Authentication with JWT
 - Allowing Only authenticated users to use certain path operations
+- User specific posts
+- Return owner_id as well as owner with specific post
+- Search, filter and pagination
 
 ## Setup
 
@@ -492,15 +495,15 @@ def create_user(
 
   - inside `post.py` we do something like this:
 
-  ```py
-    from fastapi import APIRouter
+    ```py
+      from fastapi import APIRouter
 
-    router = APIRouter(
-      prefix='/posts',
-      tags=["Posts"]
-      # This will group the post related requests under 'Posts' title.
-    )
-  ```
+      router = APIRouter(
+        prefix='/posts',
+        tags=["Posts"]
+        # This will group the post related requests under 'Posts' title.
+      )
+    ```
 
 ## Authentication with JWT
 
@@ -521,6 +524,76 @@ def create_user(
 ## Allowing Only authenticated users to use certain path operations
 
 Check:
-  - `verify_access_token`
-  - `get_current_user`
-  - Depends - OAuth2PasswordBearer
+
+- `verify_access_token`
+- `get_current_user`
+- Depends - OAuth2PasswordBearer
+
+
+## User specific Posts
+
+```py
+# Get posts based on logged in user.
+# This path operation has to be above GET '/{id}' otherwise it will be unreachable.
+@router.get('/user', response_model=list[schemas.PostRes])
+def get_user_posts(
+    db: Session = Depends(get_db),
+    current_user: schemas.UserRes = Depends(oauth2.get_current_user)
+):
+    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+    return posts
+
+```
+
+## Return owner_id as well as owner with specific post
+
+```py
+# models.py
+
+    owner_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    owner = relationship("User")
+
+
+# schemas.py -> below UserRes
+
+class PostRes(PostBase):
+    id: int
+    owner_id: int
+    created_at: datetime
+    owner: UserRes
+
+    model_config = ConfigDict(extra='forbid')
+
+```
+
+## Search filter and pagination
+
+```py
+# Get all posts
+@router.get('/', response_model=list[schemas.PostRes])
+def get_posts(
+    db: Session = Depends(get_db),
+    limit: int | None = None,
+    skip: int | None = None,
+    search: str | None = None
+):
+    posts = db.query(models.Post).filter(
+        models.Post.title.contains(search)
+        # | models.Post.content.contains(search)
+        # to search 'query' from content as well.
+    ).offset(skip).limit(limit).all()
+    return posts
+
+```
+
+
+***
+
+Bugs to be fixed later:
+
+- User already exists.

@@ -14,8 +14,16 @@ router = APIRouter(
 
 # Get all posts
 @router.get('/', response_model=list[schemas.PostRes])
-def get_posts(db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
+def get_posts(
+    db: Session = Depends(get_db),
+    limit: int | None = None,
+    skip: int | None = None,
+    search: str = ""
+):
+    posts = db.query(models.Post).filter(
+        models.Post.title.contains(search) 
+        # | models.Post.content.contains(search)
+    ).offset(skip).limit(limit).all()
     return posts
 
 
@@ -30,12 +38,25 @@ def create_post(
     db: Session = Depends(get_db),
     current_user: schemas.UserRes = Depends(oauth2.get_current_user)
 ):
-    new_post = models.Post(**post.model_dump())
+    new_post = models.Post(
+        owner_id=current_user.id,
+        **post.model_dump()
+    )
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
 
     return new_post
+
+# Get posts based on logged in user.
+# This path operation has to be above GET '/{id}' otherwise it will be unreachable.
+@router.get('/user', response_model=list[schemas.PostRes])
+def get_user_posts(
+    db: Session = Depends(get_db),
+    current_user: schemas.UserRes = Depends(oauth2.get_current_user)
+):
+    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+    return posts
 
 
 # Get single post
@@ -69,17 +90,28 @@ def delete_post(
     db: Session = Depends(get_db),
     current_user: schemas.UserRes = Depends(oauth2.get_current_user)
 ):
-    matched_post = db.query(models.Post).filter(
-        models.Post.id == id).delete(synchronize_session=False)
-    db.commit()
+    post_query = db.query(models.Post).filter(
+        models.Post.id == id
+    )
 
-    if matched_post:
-        return
-    else:
+    matched_post = post_query.first()
+
+    if not matched_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": f"No such post found."}
         )
+    
+    if bool(matched_post.owner_id != current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform this action."
+        )
+    
+    post_query.delete(synchronize_session=False)
+    db.commit()
+    
+    return
 
 
 # Update a post
@@ -93,15 +125,23 @@ def update_post(
     post_query = db.query(models.Post).filter(models.Post.id == id)
     matched_post = post_query.first()
 
-    if (matched_post):
-        post_query.update(
-            dict(post.model_dump()),
-            synchronize_session=False
-        )
-        db.commit()
-        return post_query.first()
-    else:
+    if not matched_post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"error": f"No such post found."}
         )
+
+    if bool(matched_post.owner_id != current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform this action."
+        )
+
+    post_query.update(
+        dict(post.model_dump()),
+        synchronize_session=False
+    )
+    db.commit()
+    return post_query.first()
+
+

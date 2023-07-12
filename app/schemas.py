@@ -13,13 +13,6 @@ class PostCreate(PostBase):
     pass
 
 
-class PostRes(PostBase):
-    id: int
-    created_at: datetime
-
-    model_config = ConfigDict(extra='forbid')
-
-
 class UserBase(BaseModel):
     email: EmailStr
 
@@ -44,3 +37,13 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: int | None = None
+
+
+class PostRes(PostBase):
+    id: int
+    owner_id: int
+    created_at: datetime
+    owner: UserRes
+
+    model_config = ConfigDict(extra='forbid')
+
