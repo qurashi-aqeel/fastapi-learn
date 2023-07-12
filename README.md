@@ -21,7 +21,8 @@
 - Defining response Model
 - Password Hashing with passlib
 - routers (keeping route based code seperated)
-- authentication with JWT
+- Authentication with JWT
+- Allowing Only authenticated users to use certain path operations
 
 ## Setup
 
@@ -496,7 +497,7 @@ def create_user(
 
     router = APIRouter(
       prefix='/posts',
-      tags=["Posts"] 
+      tags=["Posts"]
       # This will group the post related requests under 'Posts' title.
     )
   ```
@@ -506,6 +507,7 @@ def create_user(
 - Inside `auth.py` create POST path operation with route `/login`
 
 - check if:
+
   - user exists
   - password is correct:
     ```py
@@ -515,3 +517,10 @@ def create_user(
 - If no such user exists then return "incorrect creadentials".
 
 - Else if user exists: Create JWT
+
+## Allowing Only authenticated users to use certain path operations
+
+Check:
+  - `verify_access_token`
+  - `get_current_user`
+  - Depends - OAuth2PasswordBearer

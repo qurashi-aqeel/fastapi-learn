@@ -3,7 +3,7 @@ from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from .. import models, utils, oauth2
+from .. import models, utils, oauth2, schemas
 
 
 router = APIRouter(
@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-@router.post('/login')
+@router.post('/login', response_model=schemas.Token)
 def user_login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -22,14 +22,14 @@ def user_login(
 
     if not found_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": f"Incorrect Credentials."}
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": "Incorrect Credentials."}
         )
     
     if not utils.verify(user_credentials.password, found_user.password):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": f"Incorrect Credentials."}
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"error": "Incorrect Credentials."}
         )
         
     # Now that user is there and password is correct so we will Create a token
