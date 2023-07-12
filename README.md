@@ -18,6 +18,8 @@
 - Using SQLAlchemy
   - Install sqlAlchemy and setup conn & models
   - Qureying DB
+- Defining response Model
+- Password Hashing with passlib
 
 ## Setup
 
@@ -400,4 +402,73 @@ if (post_to_update):
     post_query.update(dict(post.model_dump()), synchronize_session=False)
     db.commit()
     return {"Updated post": post_query.first()}
+```
+
+## Defining response Model
+
+Response Model:
+
+```py
+from pydantic import ConfigDict
+
+class PostRes(PostBase):
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(extra='forbid')
+
+
+# List of posts
+@app.get('/posts', response_model=list[PostRes]) # list
+def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return posts
+
+
+# Single Post
+@app.get(
+    '/posts/{id}',
+    status_code=status.HTTP_200_OK,
+    response_model=PostRes # Single post dict.
+)...
+```
+
+## Password Hashing with passlib
+
+Install passlib:
+```sh
+pip install "passlib[bcrypt]"
+```
+
+Create user with hashed password
+```py
+# utils.py - hash password utility function
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash(password: str):
+    return pwd_context.hash(password)
+
+
+# main.py
+# Creating User
+@app.post(
+    "/users",
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.UserRes
+)
+def create_user(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db)
+):
+    # Hash the passwoed
+    user.password = hash(user.password)
+
+    new_user = models.User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
+
 ```
