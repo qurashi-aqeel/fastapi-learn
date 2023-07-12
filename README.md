@@ -21,6 +21,7 @@
 - Defining response Model
 - Password Hashing with passlib
 - routers (keeping route based code seperated)
+- authentication with JWT
 
 ## Setup
 
@@ -499,3 +500,18 @@ def create_user(
       # This will group the post related requests under 'Posts' title.
     )
   ```
+
+## Authentication with JWT
+
+- Inside `auth.py` create POST path operation with route `/login`
+
+- check if:
+  - user exists
+  - password is correct:
+    ```py
+      pwd_context.verify(password, hashed_password)
+    ```
+
+- If no such user exists then return "incorrect creadentials".
+
+- Else if user exists: Create JWT
