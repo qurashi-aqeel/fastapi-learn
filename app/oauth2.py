@@ -6,13 +6,14 @@ from sqlalchemy.orm import Session
 
 from . import schemas, models
 from .database import get_db
+from .config import env
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/login')
 
-SECRET_KEY = "51ab4402d0b2040f812936a4355b06b8d75b25055ebd369186a6546d2e923841"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = env.secret_key
+ALGORITHM = env.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = env.access_token_expire_minutes
 
 
 def create_access_token(data: dict):

@@ -2,7 +2,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_CONN_STRING = 'postgresql://postgres:password@localhost/fastapi-learn'
+
+from .config import env
+
+DATABASE_CONN_STRING = f'postgresql://{env.db_username}:{env.db_password}@{env.db_hostname}:{env.db_port}/{env.db_name}'
+
+
+# DATABASE_CONN_STRING = 'postgresql://postgres:password@localhost/fastapi-learn'
 
 engine = create_engine(DATABASE_CONN_STRING)
 

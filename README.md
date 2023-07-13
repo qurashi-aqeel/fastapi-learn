@@ -26,6 +26,7 @@
 - User specific posts
 - Return owner_id as well as owner with specific post
 - Search, filter and pagination
+- Environment Variables
 
 ## Setup
 
@@ -529,7 +530,6 @@ Check:
 - `get_current_user`
 - Depends - OAuth2PasswordBearer
 
-
 ## User specific Posts
 
 ```py
@@ -591,9 +591,44 @@ def get_posts(
 
 ```
 
+## Environment Variables
 
-***
+Reading environment variables from .env file:
 
-Bugs to be fixed later:
+```py
+# config.py
 
-- User already exists.
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
+
+
+class Settings(BaseSettings):
+    db_hostname: str
+    db_port: str
+    db_password: str
+    db_name: str
+    db_username: str
+    secret_key: str
+    algorithm: str
+    access_token_expire_minutes: int
+
+    model_config = SettingsConfigDict(env_file=".env")
+
+
+@lru_cache()
+def get_env():
+    return Settings() # type: ignore
+
+env = get_env()
+
+```
+
+To get the value of env variable:
+
+```py
+from .config import env
+
+SECRET_KEY = env.secret_key
+```
+
+> I used environment variables to create the connection string and to get secret key, algorithm, accesstoken expiry across two files `database.py` & `oauth2.py`.
