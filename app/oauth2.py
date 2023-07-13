@@ -27,7 +27,7 @@ def create_access_token(data: dict):
 
 
 def verify_access_token(token: str, credentials_exception):
-    
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         id: str | None = payload.get("user_id")
@@ -51,7 +51,7 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"}
     )
 
-    user_id = verify_access_token(token, credentials_exception).id;
+    user_id = verify_access_token(token, credentials_exception).id
 
     user = db.query(models.User).filter(models.User.id == user_id).first()
 
