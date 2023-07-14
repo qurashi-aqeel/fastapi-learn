@@ -27,6 +27,7 @@
 - Return owner_id as well as owner with specific post
 - Search, filter and pagination
 - Environment Variables
+- Votes table - composite Key
 
 ## Setup
 
@@ -632,3 +633,26 @@ SECRET_KEY = env.secret_key
 ```
 
 > I used environment variables to create the connection string and to get secret key, algorithm, accesstoken expiry across two files `database.py` & `oauth2.py`.
+
+## Votes table - composite Key
+
+- Composite Key: is the primary key that spans over multiple columns. In the case of votes/likes table the composite key (primary key) is the user_id & post_id columns.
+
+> SQL Query to grab posts with total votes:
+
+```sql
+-- All posts
+  SELECT posts.*, SUM(votes.direction) AS votes
+  FROM posts
+  LEFT JOIN votes ON posts.id = votes.post_id
+  GROUP BY posts.id;
+
+-- Single post
+  SELECT posts.*, SUM(votes.direction) AS votes
+  FROM posts
+  LEFT JOIN votes ON posts.id = votes.post_id
+  WHERE posts.id = 17
+  GROUP BY posts.id;
+```
+
+These queries will sum up all the upvotes +1 and downvotes -1 for the posts and give the result.

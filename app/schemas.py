@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import datetime
+from typing import Literal
 
 
 # Pydantic Post Base model
@@ -47,3 +48,8 @@ class PostRes(PostBase):
 
     model_config = ConfigDict(extra='forbid')
 
+
+class Vote(BaseModel):
+    post_id: int
+    direction: Literal[-1, 0, 1]
+    # -1 = downvote, 0 = remove, 1 = upvote
