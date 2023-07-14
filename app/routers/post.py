@@ -1,9 +1,11 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from .. import models, schemas
 from ..database import get_db
 from .. import oauth2
+from ..utils import post_to_dict_mod
 
 
 router = APIRouter(
@@ -20,18 +22,32 @@ def get_posts(
     skip: int | None = None,
     search: str = ""
 ):
-    posts = db.query(models.Post).filter(
+    posts = db.query(
+        models.Post,
+        func.sum(models.Vote.direction).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(models.Post.id).filter(
         models.Post.title.contains(search) 
         # | models.Post.content.contains(search)
     ).offset(skip).limit(limit).all()
-    return posts
+
+    all_posts = []
+
+    for post in posts:
+        modified_post = post_to_dict_mod(post)
+        all_posts.append(modified_post)
+
+    return all_posts
 
 
 # Create a post
 @router.post(
     '/',
     status_code=status.HTTP_201_CREATED,
-    response_model=schemas.PostRes
+    response_model=schemas.PostCreateRes
 )
 def create_post(
     post: schemas.PostCreate,
@@ -55,8 +71,24 @@ def get_user_posts(
     db: Session = Depends(get_db),
     current_user: schemas.UserRes = Depends(oauth2.get_current_user)
 ):
-    posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
-    return posts
+    posts = db.query(
+        models.Post,
+        func.sum(models.Vote.direction).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(models.Post.id).filter(
+        models.Post.owner_id == current_user.id
+    ).all()
+
+    all_posts = []
+
+    for post in posts:
+        modified_post = post_to_dict_mod(post)
+        all_posts.append(modified_post)
+
+    return all_posts
 
 
 # Get single post
@@ -69,10 +101,19 @@ def get_post(
     id: int,
     db: Session = Depends(get_db)
 ):
-    matched_post = db.query(models.Post).filter(models.Post.id == id).first()
+    matched_post = db.query(
+        models.Post,
+        func.sum(models.Vote.direction).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(models.Post.id).filter(
+        models.Post.id == id
+    ).first()
 
     if (matched_post):
-        return matched_post
+        return post_to_dict_mod(matched_post)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -115,7 +156,7 @@ def delete_post(
 
 
 # Update a post
-@router.put('/{id}', response_model=schemas.PostRes)
+@router.put('/{id}', response_model=schemas.PostCreateRes)
 def update_post(
     id: int,
     post: schemas.PostCreate,

@@ -28,6 +28,7 @@
 - Search, filter and pagination
 - Environment Variables
 - Votes table - composite Key
+- Added votes to the returned "posts" path operations
 
 ## Setup
 
@@ -656,3 +657,55 @@ SECRET_KEY = env.secret_key
 ```
 
 These queries will sum up all the upvotes +1 and downvotes -1 for the posts and give the result.
+
+## Added votes to the returned "posts" path operations
+
+New structure of posts returned
+
+```py
+def post_to_dict_mod(post):
+    # Forming dict manually
+    return {
+            "title": post[0].title,
+            "id": post[0].id,
+            "created_at": post[0].created_at,
+            "content": post[0].content,
+            "draft": post[0].draft,
+            "owner_id": post[0].owner_id,
+            "votes": post[1],
+            "owner": {
+                "email": post[0].owner.email,
+                "id": post[0].owner.id,
+                "created_at": post[0].owner.created_at
+            }
+        }
+
+```
+
+SQLAlchemy query to grab posts:
+
+```py
+# All posts
+posts = db.query(
+    models.Post,
+    func.sum(models.Vote.direction).label("votes")
+  ).join(
+    models.Vote,
+    models.Vote.post_id == models.Post.id,
+    isouter=True
+  ).group_by(models.Post.id).filter(
+    models.Post.title.contains(search)
+  ).offset(skip).limit(limit).all()
+
+# Single post
+matched_post = db.query(
+        models.Post,
+        func.sum(models.Vote.direction).label("votes")
+    ).join(
+        models.Vote,
+        models.Vote.post_id == models.Post.id,
+        isouter=True
+    ).group_by(models.Post.id).filter(
+        models.Post.id == id
+    ).first()
+```

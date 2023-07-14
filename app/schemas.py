@@ -14,6 +14,12 @@ class PostCreate(PostBase):
     pass
 
 
+class PostCreateRes(PostBase):
+    id: int
+    created_at: datetime
+    owner_id: int
+
+
 class UserBase(BaseModel):
     email: EmailStr
 
@@ -40,16 +46,17 @@ class TokenData(BaseModel):
     id: int | None = None
 
 
+class Vote(BaseModel):
+    post_id: int
+    direction: Literal[-1, 0, 1]
+    # -1 = downvote, 0 = remove, 1 = upvote
+
+
 class PostRes(PostBase):
     id: int
     owner_id: int
     created_at: datetime
     owner: UserRes
+    votes: int | None
 
     model_config = ConfigDict(extra='forbid')
-
-
-class Vote(BaseModel):
-    post_id: int
-    direction: Literal[-1, 0, 1]
-    # -1 = downvote, 0 = remove, 1 = upvote
