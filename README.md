@@ -31,6 +31,7 @@
 - Added votes to the returned "posts" path operations
 - Database migrations with Alembic
 - CORS Policy
+- Setting up git for fastApi projects
 
 ## Setup
 
@@ -793,4 +794,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+```
+
+## Setting up git for fastApi projects
+
+- .gitignore
+
+```
+.vscode
+__pycache__
+venv
+.env
+.DS_Store
+.cache
+.ipynb_checkpoints
+```
+
+- Add requirements.txt to git repo
+
+```sh
+# to save requirements.txt
+pip freeze > requirements.txt
+
+# to install the same versions of depedencies
+pip install -r requirements.txt
 ```
