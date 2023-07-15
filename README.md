@@ -30,6 +30,7 @@
 - Votes table - composite Key
 - Added votes to the returned "posts" path operations
 - Database migrations with Alembic
+- CORS Policy
 
 ## Setup
 
@@ -731,6 +732,7 @@ We have a few commands:
 - alembic revision -m "add foreign key to post table"
 
 Define upgrade and downgrade inside revision files:
+
 ```py
 # ./alembic/versions/af786......to_posts_table.py
 from alembic import op
@@ -758,3 +760,37 @@ def downgrade():
   op.drop_column('posts', 'owner_id')
 ```
 
+## CORS Policy
+
+- Cross Origin Resource Sharing (CORS) allows us to make requests from a web browser on one domain to a server on a different domain.
+
+- Origin = protocol + domain + port = `http` + `localhost` + `3000`
+
+- We might want to specify if our backend allows:
+
+  - Requests From various domains
+  - Credentials (Authorization headers, Cookies, etc).
+  - Only a few HTTP methods
+  - Specific HTTP headers or all of them with the wildcard "\*"
+
+- Setting it up:
+
+```py
+from fastapi.middleware.cors import CORSMiddleware
+
+# underneath app = FastAPI()
+origins = [
+    "https://www.google.com", # => google.com can talk to my api now.
+    "http://localhost:8080",
+]
+
+# origins = ["*"] # = allowed from all origins.
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
