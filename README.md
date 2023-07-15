@@ -29,6 +29,7 @@
 - Environment Variables
 - Votes table - composite Key
 - Added votes to the returned "posts" path operations
+- Database migrations with Alembic
 
 ## Setup
 
@@ -709,3 +710,51 @@ matched_post = db.query(
         models.Post.id == id
     ).first()
 ```
+
+## Database migrations with Alembic
+
+If we make changes to our database models (sqlalchemy) the changes will not be reflected only the tables will be created if they don't exist. So after making changes to models we need to delete the table and then save the code once which reloades the fastapi server resulting in creation of brand new table with all the columns and changes.
+
+But incase we don't want to loose the existing data we use the migration tool like alembic:
+
+```sh
+pip install alembic
+```
+
+We have a few commands:
+
+- alembic init
+- alembic current
+- alembic history
+- alembic upgrade 'rivision'
+- alembic downgrade 'rivision'
+- alembic revision -m "add foreign key to post table"
+
+Define upgrade and downgrade inside revision files:
+```py
+# ./alembic/versions/af786......to_posts_table.py
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+  op.add_column(
+    'posts',
+    sa.Column('owner_id', sa.Integer(), nullable=False)
+  )
+  op.create_foreign_key(
+    'post_users_fk',
+    source_table='posts',
+    referent_table='users',
+    local_cols=['owner_id'],
+    remote_cols=['id'],
+    ondelete='CASCADE'
+  )
+
+def downgrade():
+  op.drop_constraint(
+    'post_users_fk',
+    table_name='posts'
+  )
+  op.drop_column('posts', 'owner_id')
+```
+
