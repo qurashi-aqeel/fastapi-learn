@@ -3,6 +3,7 @@
 ### Contents:
 
 - Setup vscode and python
+- References/Docs
 - Creating virtual environment
   - Creating the virtual env in windows
   - Creating the virtual env in mac
@@ -32,10 +33,24 @@
 - Database migrations with Alembic
 - CORS Policy
 - Setting up git for fastApi projects
+- Setup Docker
 
 ## Setup
 
 Download the latest version of vscode and python from there official websites and install for the approprate machine.
+
+## References/Docs
+- [This Project](https://github.com/Iqueal/fastapi-learn)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Pydantic](https://docs.pydantic.dev/)
+- [SwaggerUi/Docs](http://127.0.0.1:8000/docs)
+- [Psucopg 2](https://www.psycopg.org/docs/index.html)
+- [PostgresQL](https://www.postgresql.org/docs/)
+- [SQLAlchemy](https://docs.sqlalchemy.org/en/)
+- [JWT](https://jwt.io/)
+- [Postgresql tutorial](https://www.postgresqltutorial.com/)
+- [Alembic](https://alembic.sqlalchemy.org/)
+- [DockerHub python](https://hub.docker.com/_/python)
 
 ## Virtual env
 
@@ -818,4 +833,37 @@ pip freeze > requirements.txt
 
 # to install the same versions of depedencies
 pip install -r requirements.txt
+```
+
+## Setup Docker
+
+- Start with a Dockerfile, this is have all of the steps necessary to create our own custom image.
+
+```Dockerfile
+FROM python:3.11
+
+WORKDIR /usr/src/app
+
+COPY requirements.txt ./
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+```
+
+- Run the following command:
+```sh
+# help = docker build --help
+# -t, --tag = tag (what should this image be called)
+# . = destination of image is current directory
+
+docker build -t fastapi-learn .
+```
+
+- If this succceeds which it should, we can see list of docker images:
+```sh
+docker images ls
 ```
