@@ -34,6 +34,7 @@
 - CORS Policy
 - Setting up git for fastApi projects
 - Setup Docker
+- Docker Compose
 
 ## Setup
 
@@ -51,6 +52,7 @@ Download the latest version of vscode and python from there official websites an
 - [Postgresql tutorial](https://www.postgresqltutorial.com/)
 - [Alembic](https://alembic.sqlalchemy.org/)
 - [DockerHub python](https://hub.docker.com/_/python)
+- [Docker Compose](https://docs.docker.com/compose/)
 
 ## Virtual env
 
@@ -867,3 +869,10 @@ docker build -t fastapi-learn .
 ```sh
 docker images ls
 ```
+
+## Docker Compose
+create a file `docker-compose.yml`
+
+- see more inside `docker-compose-dev.yml` and `docker-compose-dev.yml`
+
+- Learn more later 14:00:00.
