@@ -35,12 +35,14 @@
 - Setting up git for fastApi projects
 - Setup Docker
 - Docker Compose
+- Getting started with testing
 
 ## Setup
 
 Download the latest version of vscode and python from there official websites and install for the approprate machine.
 
 ## References/Docs
+
 - [This Project](https://github.com/Iqueal/fastapi-learn)
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Pydantic](https://docs.pydantic.dev/)
@@ -857,6 +859,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
 - Run the following command:
+
 ```sh
 # help = docker build --help
 # -t, --tag = tag (what should this image be called)
@@ -866,13 +869,54 @@ docker build -t fastapi-learn .
 ```
 
 - If this succceeds which it should, we can see list of docker images:
+
 ```sh
 docker images ls
 ```
 
 ## Docker Compose
+
 create a file `docker-compose.yml`
 
 - see more inside `docker-compose-dev.yml` and `docker-compose-dev.yml`
 
 - Learn more later 14:00:00.
+
+## Getting started with testing
+
+- Install pytest:
+
+```sh
+pip install pytest
+```
+
+- Let's create a folder in the root to test some simple functions.
+
+- Test names should look like `test_*.py` so that `pytest` wi detect those.
+
+- we have a simple function `test/stuffToTest/calculations.py` with a test file `test/test_calc.py`
+
+```py
+# test/stuffToTest/calculations.py
+def add(a: int, b:int):
+    return a + b
+
+# test/test_calc.py
+from .stuffToTest import calculations
+
+def test_add():
+    print("testing add...")
+    assert calculations.add(2 ,5) == 7
+```
+
+> Naming of the functions also matters when it comes to auto discovering tests. To test `add()` we must have `test_add()` to help pytest automatically discover the corrsponding test for some function.
+
+- To run the test:
+
+```sh
+pytest
+pytest -v # verbose
+pytest -s # to see print statements
+```
+
+- Use parametrize from pytest.mark to test a list of values.
