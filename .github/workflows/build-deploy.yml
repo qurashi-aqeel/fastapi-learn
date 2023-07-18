@@ -2,20 +2,22 @@ name: Build and Deploy
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - feature branch
 
 jobs:
   job1:
+    environment: testing
     runs-on: ubuntu-latest
     steps:
+      - run: 'echo ${{secrets.TEST_DB_URL}}'
       - name: pulling repo
         uses: actions/checkout@v3
       - name: Setup python-3.11
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
       - name: Update pip
         run: python -m pip install --upgrade pip
       - name: Install requirements.txt

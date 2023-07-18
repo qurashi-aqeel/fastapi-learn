@@ -936,16 +936,43 @@ name: Build and Deploy
 
 on:
   push:
-    branches: 
+    branches:
       - main
       - feature branch
 
 jobs:
   job1:
+    env:
+      DB_URL: 'postgres://....' # everyone can see
+      DB_URL: ${{secrets.TEST_DB_URL}} # safe
     runs-on: ubuntu-latest
     steps:
       - name: pulling repo
         uses: actions/checkout@v3 # from marketplace
       - name: Say hi
         run: echo "hi, bro - it is awesome.."
+```
+
+- To keep the environment variables safe, keep them inside Actions secrets:
+
+> Go to: Repo > settings > Secrets and Variables > Actions > New repository secret > give a name (say: TEST_DB_URL) and some value
+
+- And to use the secret:
+
+```yml
+  ...
+  env:
+    DB_URL: ${{secrets.TEST_DB_URL}}
+  ...
+```
+
+- Or the other option is to set them in environments (easy and better).
+
+- If we use the environment we will have to pass the environment:
+```yml
+  ...
+  job1:
+    environment:
+      name: testing
+      # and then the same way ${{secrets.TEST_DB_URL}}
 ```
