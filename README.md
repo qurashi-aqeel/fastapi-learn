@@ -36,6 +36,9 @@
 - Setup Docker
 - Docker Compose
 - Getting started with testing
+- CI/CD
+  - Github Actions
+  - Github Marketplace
 
 ## Setup
 
@@ -55,6 +58,9 @@ Download the latest version of vscode and python from there official websites an
 - [Alembic](https://alembic.sqlalchemy.org/)
 - [DockerHub python](https://hub.docker.com/_/python)
 - [Docker Compose](https://docs.docker.com/compose/)
+- [Github Actions](https://docs.github.com/en/actions)
+- [Github Actions Py Guide](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python)
+- [Github Marketplace](https://github.com/marketplace)
 
 ## Virtual env
 
@@ -920,3 +926,27 @@ pytest -s # to see print statements
 ```
 
 - Use parametrize from pytest.mark to test a list of values.
+
+## CI/CD - Continuous Integration / Continuous Delivery
+
+create a file `.github/workflows/build-deploy.yml`:
+
+```yml
+name: Build and Deploy
+
+on:
+  push:
+    branches: 
+      - main
+      - feature branch
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: pulling repo
+        uses: actions/checkout@v3 # from marketplace
+      - name: Say hi
+        run: echo "hi, bro - it is awesome.."
+
+```
