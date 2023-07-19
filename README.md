@@ -37,8 +37,10 @@
 - Docker Compose
 - Getting started with testing
 - CI/CD
-  - Github Actions
-  - Github Marketplace
+  - CI
+    - Github Actions
+    - Github Marketplace
+    - Setting up Postgresql service container
 
 ## Setup
 
@@ -61,6 +63,7 @@ Download the latest version of vscode and python from there official websites an
 - [Github Actions](https://docs.github.com/en/actions)
 - [Github Actions Py Guide](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python)
 - [Github Marketplace](https://github.com/marketplace)
+- [GH Actions PG Service Container](https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers)
 
 ## Virtual env
 
@@ -969,10 +972,36 @@ jobs:
 - Or the other option is to set them in environments (easy and better).
 
 - If we use the environment we will have to pass the environment:
+
 ```yml
   ...
   job1:
     environment:
       name: testing
       # and then the same way ${{secrets.TEST_DB_URL}}
+```
+
+### Setting up Postgresql service container
+
+```yml
+  ...
+  job1:
+    environment:
+      name: testing
+
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: ${{secret.DB_PWD}}
+          POSTGRES_DB: ${{secret.DB_NAME}}_test
+        ports: 
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    runs-on:
+      ...
 ```

@@ -11,7 +11,7 @@ jobs:
     environment: testing
     runs-on: ubuntu-latest
     steps:
-      - run: 'echo ${{secrets.TEST_DB_URL}}'
+      # - run: 'echo ${{secrets.TEST_DB_URL} }'
       - name: pulling repo
         uses: actions/checkout@v3
       - name: Setup python-3.11
